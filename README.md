@@ -1,8 +1,14 @@
-# Transmodel v6.2 TTL generator
+# Transmodel ontology generator
 
-Small private repository containing only the generator and its generated Turtle output.
+Small repository containing only the generator and its generated Turtle output for the
+Transmodel v6.2 base ontology. It mirrors the split used for
+[`nordic-netex-ontology`](https://github.com/entur/nordic-netex-ontology) and
+[`nordic-siri-ontology`](https://github.com/entur/nordic-siri-ontology): the generated base
+stays a faithful, mechanical projection of the official CEN model, kept separate from any
+profile or alignment layer.
 
-The generator uses the official public Transmodel v6.2 Enterprise Architect extract:
+The generator uses the official public Transmodel v6.2 Enterprise Architect extract, licensed
+as open data by CEN:
 
 https://transmodel-cen.eu/model6.2/Transmodel2024-EA_extract_for_publication.xml
 
