@@ -165,11 +165,19 @@ def generate(source: Path, output: Path) -> None:
         literal(graph, subject, SKOS.definition, concept.get("definition"))
         literal(graph, subject, TM.xmiId, concept.get("xmiId"))
         literal(graph, subject, TM.module, concept.get("module"))
-        for package in concept.get("package", []):
-            literal(graph, subject, TM.packagePath, package)
+        literal(graph, subject, TM.packagePath, " / ".join(concept.get("package", [])))
         for generalization in concept.get("generalizations", []):
             parent = URIRef(by_xmi.get(generalization, f"tm:xmi/{generalization}"))
             graph.add((subject, RDFS.subClassOf, parent))
+        for attribute in concept.get("attributes", []):
+            attribute_node = URIRef(f"{subject}/attribute/{attribute.get('xmiId') or attribute.get('name')}")
+            graph.add((subject, TM["attribute"], attribute_node))
+            literal(graph, attribute_node, RDFS.label, attribute.get("name"))
+            literal(graph, attribute_node, TM["type"], attribute.get("type"))
+            literal(graph, attribute_node, TM["lower"], attribute.get("lower"))
+            literal(graph, attribute_node, TM["upper"], attribute.get("upper"))
+            literal(graph, attribute_node, SKOS.definition, attribute.get("definition"))
+            literal(graph, attribute_node, TM["aggregation"], attribute.get("aggregation"))
     for relation in relations:
         subject = URIRef(relation["id"])
         graph.add((subject, RDF.type, TM.Relation))

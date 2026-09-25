@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transmodel / Concept Atlas</title>
+  <style>
+    :root {
+      --ink: #18242b;
+      --muted: #66757b;
+      --paper: #f5f2ea;
+      --panel: #fffdf8;
+      --line: #d8d3c7;
+      --teal: #0f6b68;
+      --teal-dark: #084b4b;
+      --coral: #d9684c;
+      --gold: #e1a52d;
+      --shadow: 0 18px 60px rgba(24, 36, 43, .12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    }
+    header {
+      min-height: 260px;
+      padding: 42px clamp(22px, 5vw, 80px) 30px;
+      color: #f8fbf6;
+      background:
+        linear-gradient(120deg, rgba(8,75,75,.98), rgba(15,107,104,.91)),
+        repeating-linear-gradient(0deg, transparent 0 19px, rgba(255,255,255,.06) 20px);
+      position: relative;
+      overflow: hidden;
+    }
+    header:after {
+      content: "TM";
+      position: absolute;
+      right: 5vw;
+      bottom: -56px;
+      font: 900 210px/1 Georgia, serif;
+      color: rgba(255,255,255,.08);
+      letter-spacing: 0;
+    }
+    .eyebrow { text-transform: uppercase; letter-spacing: 2px; font-size: 12px; color: #b9e3d9; }
+    h1 { max-width: 720px; margin: 14px 0 10px; font: 700 clamp(38px, 6vw, 78px)/.95 Georgia, serif; letter-spacing: 0; }
+    .lede { max-width: 670px; margin: 0; color: #d7eee8; font-size: 16px; line-height: 1.55; }
+    main { width: min(1500px, calc(100% - 36px)); margin: -34px auto 60px; position: relative; }
+    .toolbar {
+      display: grid; grid-template-columns: minmax(220px, 1fr) auto auto;
+      gap: 12px; padding: 15px; background: var(--panel); border: 1px solid rgba(216,211,199,.8); box-shadow: var(--shadow);
+    }
+    input, select { width: 100%; min-height: 46px; border: 1px solid var(--line); background: #fff; color: var(--ink); padding: 0 14px; font: inherit; }
+    input:focus, select:focus { outline: 3px solid rgba(225,165,45,.35); border-color: var(--gold); }
+    .stats { display: flex; align-items: center; gap: 10px; padding: 0 10px; white-space: nowrap; color: var(--muted); font-size: 13px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr); gap: 20px; margin-top: 20px; align-items: start; }
+    .catalog, .detail { background: var(--panel); border: 1px solid var(--line); }
+    .catalog-head { display: flex; justify-content: space-between; align-items: baseline; padding: 23px 24px 16px; border-bottom: 1px solid var(--line); }
+    h2 { margin: 0; font: 700 26px/1 Georgia, serif; letter-spacing: 0; }
+    .catalog-head span { color: var(--muted); font-size: 13px; }
+    .rows { display: grid; }
+    button.row { display: grid; grid-template-columns: 1fr auto; gap: 18px; width: 100%; padding: 19px 24px; text-align: left; color: inherit; background: transparent; border: 0; border-bottom: 1px solid #e8e3d9; cursor: pointer; font: inherit; }
+    button.row:hover, button.row.active { background: #edf6f0; }
+    .row-title { font: 700 17px/1.2 Georgia, serif; letter-spacing: 0; }
+    .row-id { margin-top: 5px; color: var(--teal); font: 12px/1.4 Consolas, monospace; overflow-wrap: anywhere; }
+    .row-definition { margin-top: 8px; color: var(--muted); font-size: 13px; line-height: 1.45; max-width: 700px; }
+    .badge { align-self: start; padding: 5px 8px; color: var(--teal-dark); background: #d8eee6; font-size: 11px; text-transform: uppercase; letter-spacing: .7px; }
+    .detail { position: sticky; top: 18px; min-height: 400px; padding: 28px; }
+    .detail-kicker { color: var(--coral); font-size: 12px; text-transform: uppercase; letter-spacing: 1.4px; }
+    .detail h2 { margin-top: 9px; font-size: 36px; }
+    .detail-id { margin: 10px 0 20px; color: var(--teal); font: 12px/1.5 Consolas, monospace; overflow-wrap: anywhere; }
+    .detail p { color: #405158; line-height: 1.65; }
+    .rule { height: 1px; background: var(--line); margin: 24px 0; }
+    .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .meta dt { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+    .meta dd { margin: 4px 0 0; font-size: 14px; }
+    .relation { padding: 10px 0; border-bottom: 1px solid #e8e3d9; font-size: 13px; line-height: 1.5; }
+    .relation strong { color: var(--teal); }
+    .empty { padding: 32px 24px; color: var(--muted); }
+    footer { width: min(1500px, calc(100% - 36px)); margin: 0 auto 35px; color: var(--muted); font-size: 12px; }
+    @media (max-width: 900px) {
+      header { min-height: 230px; }
+      .toolbar { grid-template-columns: 1fr; }
+      .stats { padding: 2px 0; }
+      .layout { grid-template-columns: 1fr; }
+      .detail { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">Transmodel</div>
+    <h1>Concept Atlas</h1>
+    <p class="lede">En leser for den genererte Transmodel v6.2-ontologien, direkte fra Turtle-filen i dette repoet.</p>
+  </header>
+  <main>
+    <section class="toolbar" aria-label="Katalogfilter">
+      <input id="search" type="search" placeholder="Søk i begrep, definisjon eller URI…" aria-label="Søk">
+      <select id="module" aria-label="Filtrer på modul">
+        <option value="all">Alle moduler</option>
+      </select>
+      <div class="stats"><strong id="shown">0</strong> av <span id="total">0</span> begreper</div>
+    </section>
+    <section class="layout">
+      <div class="catalog">
+        <div class="catalog-head"><h2>Begreper</h2><span id="status">Laster katalog…</span></div>
+        <div id="rows" class="rows"></div>
+      </div>
+      <aside id="detail" class="detail" aria-live="polite"></aside>
+    </section>
+  </main>
+  <footer>Kilde: <code>transmodel-v6.2.ttl</code>, generert fra det offisielle Transmodel v6.2 EA-uttrekket · <a href="https://github.com/entur/transmodel-ontology-generator">transmodel-ontology-generator</a></footer>
+  <script src="https://unpkg.com/n3/browser/n3.min.js"></script>
+  <script>
+    const TM = 'https://w3id.org/transmodel/';
+    const RDF_TYPE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
+    const RDFS_LABEL = 'http://www.w3.org/2000/01/rdf-schema#label';
+    const RDFS_SUBCLASSOF = 'http://www.w3.org/2000/01/rdf-schema#subClassOf';
+    const SKOS_DEFINITION = 'http://www.w3.org/2004/02/skos/core#definition';
+    const CONCEPT_KINDS = new Set(['Class', 'DataType', 'Enumeration', 'PrimitiveType', 'AssociationClass', 'Signal']);
+
+    const state = { concepts: [], conceptsById: new Map(), relations: [], selected: null };
+    const esc = (value) => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+
+    function groupBySubject(quads) {
+      const bySubject = new Map();
+      for (const quad of quads) {
+        const key = quad.subject.value;
+        if (!bySubject.has(key)) bySubject.set(key, []);
+        bySubject.get(key).push(quad);
+      }
+      return bySubject;
+    }
+
+    function values(quads, predicate) {
+      return quads.filter(quad => quad.predicate.value === predicate).map(quad => quad.object.value);
+    }
+
+    function first(quads, predicate) {
+      return values(quads, predicate)[0];
+    }
+
+    function readNode(bySubject, id, predicate) {
+      const quads = bySubject.get(id) || [];
+      return {
+        label: first(quads, RDFS_LABEL),
+        type: first(quads, TM + 'type'),
+        lower: first(quads, TM + 'lower'),
+        upper: first(quads, TM + 'upper'),
+        definition: first(quads, SKOS_DEFINITION),
+        aggregation: first(quads, TM + 'aggregation'),
+      };
+    }
+
+    function shortId(id) {
+      return id.split('/').slice(-1)[0];
+    }
+
+    async function load() {
+      const response = await fetch('transmodel-v6.2.ttl');
+      if (!response.ok) throw new Error(`Kunne ikke laste transmodel-v6.2.ttl (${response.status})`);
+      const text = await response.text();
+      const quads = new N3.Parser().parse(text);
+      const bySubject = groupBySubject(quads);
+
+      const concepts = [];
+      const relations = [];
+      for (const [id, quads] of bySubject) {
+        const typeValue = first(quads, RDF_TYPE);
+        if (!typeValue || !typeValue.startsWith(TM)) continue;
+        const kind = typeValue.slice(TM.length);
+        if (CONCEPT_KINDS.has(kind)) {
+          concepts.push({
+            id,
+            kind,
+            label: first(quads, RDFS_LABEL) || shortId(id),
+            definition: first(quads, SKOS_DEFINITION),
+            xmiId: first(quads, TM + 'xmiId'),
+            module: first(quads, TM + 'module') || 'unpackaged',
+            packagePath: (first(quads, TM + 'packagePath') || '').split(' / ').filter(Boolean),
+            generalizations: values(quads, RDFS_SUBCLASSOF),
+            attributes: values(quads, TM + 'attribute').map(nodeId => readNode(bySubject, nodeId, TM + 'attribute')),
+          });
+        } else if (kind === 'Relation') {
+          relations.push({
+            id,
+            label: first(quads, RDFS_LABEL),
+            module: first(quads, TM + 'module'),
+            relationType: first(quads, TM + 'relationType'),
+            subject: first(quads, TM + 'subject'),
+            object: first(quads, TM + 'object'),
+            predicate: first(quads, TM + 'predicate'),
+            ends: values(quads, TM + 'end').map(nodeId => readNode(bySubject, nodeId, TM + 'end')),
+          });
+        }
+      }
+      concepts.sort((a, b) => a.label.localeCompare(b.label));
+      state.concepts = concepts;
+      state.conceptsById = new Map(concepts.map(concept => [concept.id, concept]));
+      state.relations = relations;
+      state.selected = concepts[0]?.id;
+
+      const modules = Array.from(new Set(concepts.map(concept => concept.module))).sort();
+      document.querySelector('#module').innerHTML = '<option value="all">Alle moduler</option>' +
+        modules.map(module => `<option value="${esc(module)}">${esc(module)}</option>`).join('');
+      document.querySelector('#total').textContent = concepts.length;
+      render();
+    }
+
+    function render() {
+      const query = document.querySelector('#search').value.trim().toLowerCase();
+      const module = document.querySelector('#module').value;
+      const concepts = state.concepts.filter(concept => {
+        const haystack = `${concept.label} ${concept.definition || ''} ${concept.id} ${concept.packagePath.join(' ')}`.toLowerCase();
+        return (!query || haystack.includes(query)) && (module === 'all' || concept.module === module);
+      });
+      document.querySelector('#shown').textContent = concepts.length;
+      document.querySelector('#status').textContent = concepts.length ? 'Transmodel v6.2' : 'Ingen treff';
+      document.querySelector('#rows').innerHTML = concepts.length ? concepts.map(concept => `
+        <button class="row ${concept.id === state.selected ? 'active' : ''}" data-id="${esc(concept.id)}">
+          <div><div class="row-title">${esc(concept.label)}</div><div class="row-id">${esc(concept.id)}</div><div class="row-definition">${esc(concept.definition || '')}</div></div>
+          <span class="badge">${esc(concept.kind)}</span>
+        </button>`).join('') : '<div class="empty">Prøv et annet søkeord eller fjern filteret.</div>';
+      document.querySelectorAll('.row').forEach(row => row.addEventListener('click', () => { state.selected = row.dataset.id; render(); }));
+      renderDetail();
+    }
+
+    function renderDetail() {
+      const concept = state.conceptsById.get(state.selected) || state.concepts[0];
+      if (!concept) {
+        document.querySelector('#detail').innerHTML = '<div class="empty">Ingen begrep valgt.</div>';
+        return;
+      }
+      const relations = state.relations.filter(relation => relation.subject === concept.id || relation.object === concept.id);
+      const definition = concept.definition || 'Ingen dokumentasjonstekst er koblet til dette UML-elementet i XMI-uttrekket ennå.';
+      const attributes = concept.attributes || [];
+      const packageName = concept.packagePath.slice(-1)[0] || 'Ukjent pakke';
+      const parents = concept.generalizations.map(id => state.conceptsById.get(id)).filter(Boolean);
+      document.querySelector('#detail').innerHTML = `
+        <div class="detail-kicker">${esc(concept.kind)} · modul ${esc(concept.module)}</div>
+        <h2>${esc(concept.label)}</h2>
+        <div class="detail-id">${esc(concept.id)}</div>
+        <p>${esc(definition)}</p>
+        <div class="rule"></div>
+        <dl class="meta"><div><dt>Pakke</dt><dd>${esc(packageName)}</dd></div><div><dt>Full pakkevei</dt><dd>${esc(concept.packagePath.join(' › ') || 'Ukjent')}</dd></div></dl>
+        <div class="rule"></div>
+        <h3>Attributter (${attributes.length})</h3>
+        ${attributes.length ? attributes.map(attribute => `<div class="relation"><strong>${esc(attribute.label)}</strong> · ${esc(attribute.type || 'ukjent type')} · ${esc(attribute.lower || '1')}..${esc(attribute.upper || '1')}</div>`).join('') : '<p>Ingen attributter registrert på dette elementet.</p>'}
+        <div class="rule"></div>
+        <h3>Utvider</h3>
+        ${parents.length ? parents.map(parent => `<div class="relation"><strong>rdfs:subClassOf</strong> · ${esc(parent.label)}<br><span>${esc(parent.id)}</span></div>`).join('') : '<p>Ingen generalisering registrert.</p>'}
+        <div class="rule"></div>
+        <h3>Relasjoner (${relations.length})</h3>
+        ${relations.length ? relations.map(relation => {
+          const outgoing = relation.subject === concept.id;
+          const otherId = outgoing ? relation.object : relation.subject;
+          const other = state.conceptsById.get(otherId);
+          return `<div class="relation"><strong>${outgoing ? 'Utgående' : 'Inngående'}</strong> · ${esc(relation.relationType)}${relation.label ? ` · ${esc(relation.label)}` : ''}<br><span>${esc(other ? other.label : (otherId || 'ukjent'))}</span></div>`;
+        }).join('') : '<p>Ingen relasjoner i første uttrekk.</p>'}`;
+    }
+
+    document.querySelector('#search').addEventListener('input', render);
+    document.querySelector('#module').addEventListener('change', render);
+    load().catch(error => {
+      document.querySelector('#status').textContent = 'Feil';
+      document.querySelector('#rows').innerHTML = `<div class="empty">${esc(error.message)} Start siden via en lokal webserver.</div>`;
+    });
+  </script>
+</body>
+</html>
