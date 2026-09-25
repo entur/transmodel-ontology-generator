@@ -1,0 +1,17 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Publish private generator repo",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"$repo = 'hfjelstad/transmodel-generator'; $folder = 'C:\\Users\\hfjelstad\\Documents\\transmodel-generator'; gh repo view $repo --json nameWithOwner | Out-Null; if ($LASTEXITCODE -eq 0) { throw \"Repository already exists: $repo\" }; git -C $folder init; git -C $folder add generate_transmodel_ttl.py transmodel-v6.2.ttl README.md; git -C $folder commit -m 'Add Transmodel v6.2 TTL generator'; gh repo create $repo --private --source $folder --remote origin --push"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}
