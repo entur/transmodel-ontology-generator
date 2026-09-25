@@ -219,7 +219,7 @@
       document.querySelector('#status').textContent = concepts.length ? 'Transmodel v6.2' : 'Ingen treff';
       document.querySelector('#rows').innerHTML = concepts.length ? concepts.map(concept => `
         <button class="row ${concept.id === state.selected ? 'active' : ''}" data-id="${esc(concept.id)}">
-          <div><div class="row-title">${esc(concept.label)}</div><div class="row-id">${esc(concept.id)}</div><div class="row-definition">${esc(concept.definition || '')}</div></div>
+          <div><div class="row-title">${esc(concept.label)}</div><div class="row-definition">${esc(concept.definition || 'Ingen dokumentasjonstekst ennå')}</div></div>
           <span class="badge">${esc(concept.kind)}</span>
         </button>`).join('') : '<div class="empty">Prøv et annet søkeord eller fjern filteret.</div>';
       document.querySelectorAll('.row').forEach(row => row.addEventListener('click', () => { state.selected = row.dataset.id; render(); }));

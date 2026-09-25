@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -34,6 +35,27 @@ def child_value(element: ET.Element, name: str) -> str | None:
 def module_name(package: tuple[str, ...]) -> str:
     value = package[1] if len(package) > 1 else (package[0] if package else "unpackaged")
     return re.sub(r"[^a-zA-Z0-9]+", "-", value).strip("-").lower() or "unpackaged"
+
+
+def normalize_label(value: str | None) -> str:
+    return re.sub(r"[^A-Z0-9]", "", (value or "").upper())
+
+
+def load_v6_definitions(path: Path) -> dict[str, str]:
+    """v6.2 XMI class documentation is sparse, so fall back to v6.0 EA HTML notes
+    (harvest_transmodel_v6.py) matched by normalized label."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    result: dict[str, str] = {}
+    for term in data.get("terms", []):
+        label = term.get("label", "")
+        if "::" not in label:
+            continue
+        name = label.rsplit("::", 1)[-1].strip()
+        definition = clean(term.get("definition"))
+        if not name or not definition or name.upper().endswith("MODEL"):
+            continue
+        result.setdefault(normalize_label(name), definition)
+    return result
 
 
 def documentation(element: ET.Element, by_id: dict[str, str]) -> str | None:
@@ -130,7 +152,7 @@ def literal(graph: Graph, subject: URIRef, predicate: URIRef, value: object) -> 
         graph.add((subject, predicate, Literal(value)))
 
 
-def generate(source: Path, output: Path) -> None:
+def generate(source: Path, output: Path, definitions: Path | None = None) -> None:
     root = ET.parse(source).getroot()
     parents = {child: parent for parent in root.iter() for child in parent}
     docs = {}
@@ -143,6 +165,7 @@ def generate(source: Path, output: Path) -> None:
     concepts: list[dict] = []
     relations: list[dict] = []
     walk(root, (), concepts, relations, docs)
+    v6_definitions = load_v6_definitions(definitions) if definitions else {}
     by_xmi = {item["xmiId"]: item["id"] for item in concepts if item.get("xmiId")}
     for relation in relations:
         object_id = relation.pop("objectXmiId", None)
@@ -162,7 +185,14 @@ def generate(source: Path, output: Path) -> None:
         subject = URIRef(concept["id"])
         graph.add((subject, RDF.type, TM[concept["kind"]]))
         literal(graph, subject, RDFS.label, concept["label"])
-        literal(graph, subject, SKOS.definition, concept.get("definition"))
+        definition = concept.get("definition")
+        definition_source = "transmodel-v6.2-xmi" if definition else None
+        if not definition:
+            overlay = v6_definitions.get(normalize_label(concept["label"]))
+            if overlay:
+                definition, definition_source = overlay, "transmodel-v6.0-html"
+        literal(graph, subject, SKOS.definition, definition)
+        literal(graph, subject, TM.definitionSource, definition_source)
         literal(graph, subject, TM.xmiId, concept.get("xmiId"))
         literal(graph, subject, TM.module, concept.get("module"))
         literal(graph, subject, TM.packagePath, " / ".join(concept.get("package", [])))
@@ -209,5 +239,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("source", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument("--definitions", type=Path, default=Path("transmodel-6.0-html-harvest.json"),
+                         help="v6.0 HTML harvest (harvest_transmodel_v6.py) used to fill in missing v6.2 definitions")
     args = parser.parse_args()
-    generate(args.source, args.output)
+    generate(args.source, args.output, args.definitions if args.definitions.exists() else None)
