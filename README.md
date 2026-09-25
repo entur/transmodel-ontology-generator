@@ -26,8 +26,11 @@ Generate the output:
 python generate_transmodel_ttl.py Transmodel2024-EA_extract_for_publication.xml transmodel-v6.2.ttl
 ```
 
-The v6.2 XMI extract has very sparse class-level documentation, so most concepts have no
-`skos:definition` yet. This generator is scoped to v6.2 only; it does not pull in v6.0
+The v6.2 XMI extract stores most class and package documentation in the Enterprise
+Architect `xmi:Extension` mirror tree (`<element xmi:idref="..."><properties
+documentation="..."/></element>`), not as a `<documentation>` tag on the element itself.
+The generator reads both locations, giving roughly 46% definition coverage. This generator
+is scoped to v6.2 only; it does not pull in v6.0
 material.
 
 The source XML is intentionally not committed. The generated TTL preserves:

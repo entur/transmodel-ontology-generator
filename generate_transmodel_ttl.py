@@ -134,12 +134,23 @@ def generate(source: Path, output: Path) -> None:
     root = ET.parse(source).getroot()
     parents = {child: parent for parent in root.iter() for child in parent}
     docs = {}
+    # Attribute-level notes: <attribute xmi:idref="..."><documentation value="..."/></attribute>
     for node in root.iter("documentation"):
         parent = parents.get(node)
         text = clean(node.get("value") or "".join(node.itertext()))
         reference = parent.get(f"{{{XMI}}}idref") if parent is not None else None
         if reference and text:
             docs.setdefault(reference, text)
+    # Class/package-level notes live in the Enterprise Architect xmi:Extension mirror tree,
+    # as <element xmi:idref="..."><properties documentation="..."/></element>, not as a
+    # <documentation> tag on the packagedElement itself.
+    for element in root.iter("element"):
+        reference = attr(element, "idref")
+        properties = element.find("properties")
+        if reference and properties is not None:
+            text = clean(properties.get("documentation"))
+            if text:
+                docs.setdefault(reference, text)
     concepts: list[dict] = []
     relations: list[dict] = []
     walk(root, (), concepts, relations, docs)
