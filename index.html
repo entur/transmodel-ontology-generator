@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="no">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -94,26 +94,26 @@
   <header>
     <div class="eyebrow">Transmodel</div>
     <h1>Concept Atlas</h1>
-    <p class="lede">En leser for den genererte Transmodel v6.2-ontologien, direkte fra Turtle-filen i dette repoet.</p>
+    <p class="lede">A reader for the generated Transmodel v6.2 ontology, straight from the Turtle file in this repo.</p>
   </header>
   <main>
-    <section class="toolbar" aria-label="Katalogfilter">
-      <input id="search" type="search" placeholder="Søk i begrep, definisjon eller URI…" aria-label="Søk">
-      <select id="module" aria-label="Filtrer på modul">
-        <option value="all">Alle moduler</option>
+    <section class="toolbar" aria-label="Catalogue filters">
+      <input id="search" type="search" placeholder="Search concepts, definitions, or URIs…" aria-label="Search">
+      <select id="module" aria-label="Filter by module">
+        <option value="all">All modules</option>
       </select>
-      <label class="toggle"><input type="checkbox" id="only-documented" checked> Bare med dokumentasjon</label>
-      <div class="stats"><strong id="shown">0</strong> av <span id="total">0</span> begreper</div>
+      <label class="toggle"><input type="checkbox" id="only-documented" checked> Documented only</label>
+      <div class="stats"><strong id="shown">0</strong> of <span id="total">0</span> concepts</div>
     </section>
     <section class="layout">
       <div class="catalog">
-        <div class="catalog-head"><h2>Begreper</h2><span id="status">Laster katalog…</span></div>
+        <div class="catalog-head"><h2>Concepts</h2><span id="status">Loading catalogue…</span></div>
         <div id="rows" class="rows"></div>
       </div>
       <aside id="detail" class="detail" aria-live="polite"></aside>
     </section>
   </main>
-  <footer>Kilde: <code>transmodel-v6.2.ttl</code>, generert fra det offisielle Transmodel v6.2 EA-uttrekket · <a href="https://github.com/entur/transmodel-ontology-generator">transmodel-ontology-generator</a></footer>
+  <footer>Source: <code>transmodel-v6.2.ttl</code>, generated from the official Transmodel v6.2 EA extract · <a href="https://github.com/entur/transmodel-ontology-generator">transmodel-ontology-generator</a></footer>
   <script src="https://unpkg.com/n3/browser/n3.min.js"></script>
   <script>
     const TM = 'https://w3id.org/transmodel/';
@@ -162,7 +162,7 @@
 
     async function load() {
       const response = await fetch('transmodel-v6.2.ttl');
-      if (!response.ok) throw new Error(`Kunne ikke laste transmodel-v6.2.ttl (${response.status})`);
+      if (!response.ok) throw new Error(`Could not load transmodel-v6.2.ttl (${response.status})`);
       const text = await response.text();
       const quads = new N3.Parser().parse(text);
       const bySubject = groupBySubject(quads);
@@ -205,7 +205,7 @@
       state.selected = concepts[0]?.id;
 
       const modules = Array.from(new Set(concepts.map(concept => concept.module))).sort();
-      document.querySelector('#module').innerHTML = '<option value="all">Alle moduler</option>' +
+      document.querySelector('#module').innerHTML = '<option value="all">All modules</option>' +
         modules.map(module => `<option value="${esc(module)}">${esc(module)}</option>`).join('');
       document.querySelector('#total').textContent = concepts.length;
       render();
@@ -220,12 +220,12 @@
         return (!query || haystack.includes(query)) && (module === 'all' || concept.module === module) && (!onlyDocumented || Boolean(concept.definition));
       });
       document.querySelector('#shown').textContent = concepts.length;
-      document.querySelector('#status').textContent = concepts.length ? 'Transmodel v6.2' : 'Ingen treff';
+      document.querySelector('#status').textContent = concepts.length ? 'Transmodel v6.2' : 'No matches';
       document.querySelector('#rows').innerHTML = concepts.length ? concepts.map(concept => `
         <button class="row ${concept.id === state.selected ? 'active' : ''}" data-id="${esc(concept.id)}">
-          <div><div class="row-title">${esc(concept.label)}</div><div class="row-definition">${esc(concept.definition || 'Ingen dokumentasjonstekst ennå')}</div></div>
+          <div><div class="row-title">${esc(concept.label)}</div><div class="row-definition">${esc(concept.definition || 'No documentation text yet')}</div></div>
           <span class="badge">${esc(concept.kind)}</span>
-        </button>`).join('') : '<div class="empty">Prøv et annet søkeord eller fjern filteret.</div>';
+        </button>`).join('') : '<div class="empty">Try another search term or clear the filter.</div>';
       document.querySelectorAll('.row').forEach(row => row.addEventListener('click', () => { state.selected = row.dataset.id; render(); }));
       renderDetail();
     }
@@ -233,43 +233,43 @@
     function renderDetail() {
       const concept = state.conceptsById.get(state.selected) || state.concepts[0];
       if (!concept) {
-        document.querySelector('#detail').innerHTML = '<div class="empty">Ingen begrep valgt.</div>';
+        document.querySelector('#detail').innerHTML = '<div class="empty">No concept selected.</div>';
         return;
       }
       const relations = state.relations.filter(relation => relation.subject === concept.id || relation.object === concept.id);
-      const definition = concept.definition || 'Ingen dokumentasjonstekst er koblet til dette UML-elementet i XMI-uttrekket ennå.';
+      const definition = concept.definition || 'No documentation text is linked to this UML element in the XMI extract yet.';
       const attributes = concept.attributes || [];
-      const packageName = concept.packagePath.slice(-1)[0] || 'Ukjent pakke';
+      const packageName = concept.packagePath.slice(-1)[0] || 'Unknown package';
       const parents = concept.generalizations.map(id => state.conceptsById.get(id)).filter(Boolean);
       document.querySelector('#detail').innerHTML = `
-        <div class="detail-kicker">${esc(concept.kind)} · modul ${esc(concept.module)}</div>
+        <div class="detail-kicker">${esc(concept.kind)} · module ${esc(concept.module)}</div>
         <h2>${esc(concept.label)}</h2>
         <div class="detail-id">${esc(concept.id)}</div>
         <p>${esc(definition)}</p>
         <div class="rule"></div>
-        <dl class="meta"><div><dt>Pakke</dt><dd>${esc(packageName)}</dd></div><div><dt>Full pakkevei</dt><dd>${esc(concept.packagePath.join(' › ') || 'Ukjent')}</dd></div></dl>
+        <dl class="meta"><div><dt>Package</dt><dd>${esc(packageName)}</dd></div><div><dt>Full package path</dt><dd>${esc(concept.packagePath.join(' › ') || 'Unknown')}</dd></div></dl>
         <div class="rule"></div>
-        <h3>Attributter (${attributes.length})</h3>
-        ${attributes.length ? attributes.map(attribute => `<div class="relation"><strong>${esc(attribute.label)}</strong> · ${esc(attribute.type || 'ukjent type')} · ${esc(attribute.lower || '1')}..${esc(attribute.upper || '1')}</div>`).join('') : '<p>Ingen attributter registrert på dette elementet.</p>'}
+        <h3>Attributes (${attributes.length})</h3>
+        ${attributes.length ? attributes.map(attribute => `<div class="relation"><strong>${esc(attribute.label)}</strong> · ${esc(attribute.type || 'unknown type')} · ${esc(attribute.lower || '1')}..${esc(attribute.upper || '1')}</div>`).join('') : '<p>No attributes recorded for this element.</p>'}
         <div class="rule"></div>
-        <h3>Utvider</h3>
-        ${parents.length ? parents.map(parent => `<div class="relation"><strong>rdfs:subClassOf</strong> · ${esc(parent.label)}<br><span>${esc(parent.id)}</span></div>`).join('') : '<p>Ingen generalisering registrert.</p>'}
+        <h3>Extends</h3>
+        ${parents.length ? parents.map(parent => `<div class="relation"><strong>rdfs:subClassOf</strong> · ${esc(parent.label)}<br><span>${esc(parent.id)}</span></div>`).join('') : '<p>No generalization recorded.</p>'}
         <div class="rule"></div>
-        <h3>Relasjoner (${relations.length})</h3>
+        <h3>Relations (${relations.length})</h3>
         ${relations.length ? relations.map(relation => {
           const outgoing = relation.subject === concept.id;
           const otherId = outgoing ? relation.object : relation.subject;
           const other = state.conceptsById.get(otherId);
-          return `<div class="relation"><strong>${outgoing ? 'Utgående' : 'Inngående'}</strong> · ${esc(relation.relationType)}${relation.label ? ` · ${esc(relation.label)}` : ''}<br><span>${esc(other ? other.label : (otherId || 'ukjent'))}</span></div>`;
-        }).join('') : '<p>Ingen relasjoner i første uttrekk.</p>'}`;
+          return `<div class="relation"><strong>${outgoing ? 'Outgoing' : 'Incoming'}</strong> · ${esc(relation.relationType)}${relation.label ? ` · ${esc(relation.label)}` : ''}<br><span>${esc(other ? other.label : (otherId || 'unknown'))}</span></div>`;
+        }).join('') : '<p>No relations in the first extract.</p>'}`;
     }
 
     document.querySelector('#search').addEventListener('input', render);
     document.querySelector('#module').addEventListener('change', render);
     document.querySelector('#only-documented').addEventListener('change', render);
     load().catch(error => {
-      document.querySelector('#status').textContent = 'Feil';
-      document.querySelector('#rows').innerHTML = `<div class="empty">${esc(error.message)} Start siden via en lokal webserver.</div>`;
+      document.querySelector('#status').textContent = 'Error';
+      document.querySelector('#rows').innerHTML = `<div class="empty">${esc(error.message)} Start the page via a local web server.</div>`;
     });
   </script>
 </body>
