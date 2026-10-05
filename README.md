@@ -12,6 +12,16 @@ as open data by CEN:
 
 https://transmodel-cen.eu/model6.2/Transmodel2024-EA_extract_for_publication.xml
 
+## Browse
+
+The generated `transmodel-v6.2.ttl` is published through a small static site, `index.html`,
+served via GitHub Pages:
+
+https://entur.github.io/transmodel-ontology-generator/
+
+It loads the Turtle file straight in the browser and lets you search, filter by module, and
+traverse concepts, their attributes, generalizations, and relations.
+
 ## Generate
 
 Install the only runtime dependency:
