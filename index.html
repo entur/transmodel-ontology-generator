@@ -211,6 +211,22 @@
       render();
     }
 
+    function matchScore(concept, query) {
+      if (!query) return 0;
+      const label = (concept.label || '').toLowerCase();
+      const definition = (concept.definition || '').toLowerCase();
+      const id = (concept.id || '').toLowerCase();
+      const packagePath = concept.packagePath.join(' ').toLowerCase();
+      if (label === query) return 100;
+      if (label.startsWith(query)) return 80;
+      if (label.includes(` ${query}`) || label.includes(`${query} `)) return 70;
+      if (label.includes(query)) return 60;
+      if (id.includes(query)) return 40;
+      if (definition.includes(query)) return 20;
+      if (packagePath.includes(query)) return 10;
+      return 0;
+    }
+
     function render() {
       const query = document.querySelector('#search').value.trim().toLowerCase();
       const module = document.querySelector('#module').value;
@@ -218,7 +234,7 @@
       const concepts = state.concepts.filter(concept => {
         const haystack = `${concept.label} ${concept.definition || ''} ${concept.id} ${concept.packagePath.join(' ')}`.toLowerCase();
         return (!query || haystack.includes(query)) && (module === 'all' || concept.module === module) && (!onlyDocumented || Boolean(concept.definition));
-      });
+      }).sort((a, b) => matchScore(b, query) - matchScore(a, query) || a.label.localeCompare(b.label));
       document.querySelector('#shown').textContent = concepts.length;
       document.querySelector('#status').textContent = concepts.length ? 'Transmodel v6.2' : 'No matches';
       document.querySelector('#rows').innerHTML = concepts.length ? concepts.map(concept => `
