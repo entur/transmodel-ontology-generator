@@ -4,6 +4,7 @@ import argparse
 import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from urllib.parse import quote
 
 from rdflib import Graph, Literal, Namespace, URIRef
 from rdflib.namespace import OWL, RDF, RDFS, SKOS
@@ -61,7 +62,7 @@ def walk(element: ET.Element, packages: tuple[str, ...], concepts: list[dict], r
         if name and kind in {"Class", "DataType", "Enumeration", "PrimitiveType", "AssociationClass", "Signal"}:
             xmi_id = attr(child, "id") or ""
             concept = {
-                "id": f"tm:xmi/{xmi_id}" if xmi_id else f"tm:term/{name}",
+                "id": str(TM[f"xmi/{xmi_id}"]) if xmi_id else str(TM[f"term/{quote(name)}"]),
                 "label": name,
                 "kind": kind,
                 "xmiId": xmi_id,
@@ -89,7 +90,7 @@ def walk(element: ET.Element, packages: tuple[str, ...], concepts: list[dict], r
                 if parent:
                     concept["generalizations"].append(parent)
                     relations.append({
-                        "id": f"tm:xmi/generalization/{attr(generalization, 'id') or len(relations)}",
+                        "id": str(TM[f"xmi/generalization/{attr(generalization, 'id') or len(relations)}"]),
                         "type": "tm:Relation",
                         "subject": concept["id"],
                         "predicate": RDFS.subClassOf,
@@ -111,7 +112,7 @@ def walk(element: ET.Element, packages: tuple[str, ...], concepts: list[dict], r
                     "definition": documentation(end, docs),
                 })
             relations.append({
-                "id": f"tm:xmi/association/{attr(child, 'id') or name}",
+                "id": str(TM[f"xmi/association/{attr(child, 'id') or quote(name)}"]),
                 "type": "tm:Relation",
                 "label": name,
                 "kind": "Association",
@@ -158,10 +159,10 @@ def generate(source: Path, output: Path) -> None:
     for relation in relations:
         object_id = relation.pop("objectXmiId", None)
         if object_id:
-            relation["object"] = by_xmi.get(object_id, f"tm:xmi/{object_id}")
+            relation["object"] = by_xmi.get(object_id, str(TM[f"xmi/{object_id}"]))
         for end in relation.get("ends", []):
             type_id = end.pop("typeXmiId", None)
-            end["type"] = by_xmi.get(type_id, f"tm:xmi/{type_id}") if type_id else None
+            end["type"] = by_xmi.get(type_id, str(TM[f"xmi/{type_id}"])) if type_id else None
     graph = Graph()
     graph.bind("tm", TM); graph.bind("rdfs", RDFS); graph.bind("owl", OWL); graph.bind("skos", SKOS)
     ontology = TM["catalog/transmodel-6.2"]
@@ -178,7 +179,7 @@ def generate(source: Path, output: Path) -> None:
         literal(graph, subject, TM.module, concept.get("module"))
         literal(graph, subject, TM.packagePath, " / ".join(concept.get("package", [])))
         for generalization in concept.get("generalizations", []):
-            parent = URIRef(by_xmi.get(generalization, f"tm:xmi/{generalization}"))
+            parent = URIRef(by_xmi.get(generalization, str(TM[f"xmi/{generalization}"])))
             graph.add((subject, RDFS.subClassOf, parent))
         for attribute in concept.get("attributes", []):
             attribute_node = URIRef(f"{subject}/attribute/{attribute.get('xmiId') or attribute.get('name')}")
